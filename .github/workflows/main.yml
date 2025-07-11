@@ -16,20 +16,30 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Set Git user config
+      - name: Set Git config
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-      - name: Add Hugging Face remote and sync
+      - name: Sync with Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          # Add HF remote
           git remote add hf https://preshnaib:${HF_TOKEN}@huggingface.co/spaces/preshnaib/Search_Engine_llm
 
-          # Fetch and merge remote Hugging Face changes
-          git fetch hf main || echo "Nothing to fetch from remote"
-          git merge hf/main --allow-unrelated-histories -m "Merge Hugging Face main"
+          # Fetch Hugging Face Space code
+          git fetch hf main || echo "Nothing to fetch"
 
-          # Push to Hugging Face
+          # Try merging HF's code
+          git merge hf/main --allow-unrelated-histories -m "Auto merge Hugging Face code" || true
+
+          # Resolve conflicts by keeping your GitHub (local) version
+          git checkout --ours .
+          git add .
+
+          # Commit resolved merge
+          git commit -m "Resolve merge conflicts and deploy to HF" || echo "Nothing to commit"
+
+          # Push to HF
           git push hf main
